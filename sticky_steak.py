@@ -1,4 +1,5 @@
 import os, argparse, sys
+from src.steak import Steak
 
 title = '''
 ,d88~~\   d8   ,e,         888   _                 ,d88~~\   d8                       888   _   
@@ -9,98 +10,6 @@ title = '''
 \__88P'  "88_/ 888  "88__/ 888  Y88b   /           \__88P'  "88_/  "88___/   "88_-888 888  Y88b 
                                      _/                                                         '''
 
-def get_difference(args, full_path: str) -> list:
-  '''Function combines 2 files together to get the difference between them.'''
-  
-  f1_lines = []
-  f2_lines = []
-  difference = []
-  
-  with open(f"{full_path}\\{args.file1}") as f:
-    f1_lines = f.read().split("\n")
-
-  with open(f"{full_path}\\{args.file2}") as f:
-    f2_lines = f.read().split("\n")    
-  
-  first_set = set(f1_lines)
-  second_set = set(f2_lines)
-  difference = first_set ^ second_set
-
-  return list(difference)
-
-
-def get_combined_output(args, full_path: str) -> list:
-  '''Function combines 2 files together and then removes duplicate lines.'''
-  f1_lines = []
-  f2_lines = []
-  combine_output = []
-  output = []
-  
-  with open(f"{full_path}\\{args.file1}") as f:
-    f1_lines = f.read().split("\n")
-
-  with open(f"{full_path}\\{args.file2}") as f:
-    f2_lines = f.read().split("\n")
-
-  combine_output.extend(f1_lines)
-  combine_output.extend(f2_lines)
-  output = list(set(combine_output))
-  
-  return output
-
-
-def subtract_from(args, full_path: str) -> list:
-  '''Function removes the contents of file2 that exists in file1'''
-  f1_lines = []
-  f2_lines = []
-  subtracted_list = []
-
-  with open(f"{full_path}\\{args.file1}") as f:
-    f1_lines = f.read().split("\n")
-
-  with open(f"{full_path}\\{args.file2}") as f:
-    f2_lines = f.read().split("\n")
-
-  first_set = set(f1_lines)
-  second_set = set(f2_lines)
-  subtracted_list = (second_set - first_set)
-  
-  return list(subtracted_list)
-
-
-def write_output(args, content: list, full_path: str):
-  '''Function write script output to a file.'''
-
-  output = args.output
-  lines = ""
-  
-  if output == None:
-    output = "output.txt"
-
-  if len(content) < 1:
-    print(f"Nothing to write to file [{output}]")
-    return
-
-  for i in content:
-    temp_ln = i
-    if len(temp_ln) > 0 and temp_ln[len(temp_ln)-1] != "\n":
-      temp_ln += "\n"
-
-    lines += temp_ln
-  
-  with open(f"{full_path}\\{output}", "w") as f:
-    n_bytes = f.write(lines)
-    
-    if n_bytes > 0:
-      print(f"Successfully wrote {len(content)} lines ({n_bytes}) bytes to file '{full_path}\\{output}'")
-
-
-def display_output(args, text: str):
-  if args.debug == True:
-    print(repr(text))
-  else:
-    print(text)
-
 
 def main():
   parser = argparse.ArgumentParser(description="None")
@@ -109,36 +18,51 @@ def main():
   parser.add_argument("-c", "--combine", action="store_true", help="Combine 2 files together and remove duplicate lines")
   parser.add_argument("-d", "--difference", action="store_true", help="Get the difference between 2 files")
   parser.add_argument("-o", "--output", action="store", help="Write the new output to a file")
+  parser.add_argument("--ft", action="store", help="Write output to a specific file type. Options [txt, json]")
   parser.add_argument("-D", "--debug", action="store_true", help="Display all characters including unprintables")
   parser.add_argument("-s", "--subtract", action="store_true", help="Subtract lines from file2 using contents of file1")
+  parser.add_argument("-r", "--ref", action="store", help="Show each reference for each line if any. File1 or 2 must be in json format")
 
   sys_args = sys.argv
   for i in sys_args:
-    if i == "-h" or "--help":
+    if "-h" in i or "--help" in i:
       print(f"\n\n{title}\n\n")
       break
 
   args = parser.parse_args()
   full_path = os.getcwd()
+  sticky = Steak(args, full_path)
   out = []
 
   if args.file1 != None and args.file2 != None:
+    
     if args.combine == True:
-      out = get_combined_output(args, full_path)
+      out = sticky.get_combined_output()
 
     elif args.difference == True:
-      out = get_difference(args, full_path)
+      out = sticky.get_difference()
 
     elif args.subtract == True:
-      out = subtract_from(args, full_path)
+      out = sticky.subtract_from()
 
-    if args.output != None:
-      if len(out) > 0:
-        write_output(args, out, full_path)
+    if args.ft != None:
+      if args.ft == "json":
+        out = Steak.get_json(out)
+
+    if args.output != None and len(out) > 0:
+      if args.ft == "txt":
+        sticky.write_output(out)
+      elif args.ft == "json":
+        sticky.write_json(out)
+      else:
+        sticky.write_output(out)
     
     elif args.output == None:
-      for i in out:
-        display_output(args, i)
+      if args.ft == None or args.ft == "txt":
+        for i in out:
+          sticky.display_output(i)
+      else:
+        sticky.display_output(out)
 
 
 if __name__ == "__main__":
