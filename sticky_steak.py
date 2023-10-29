@@ -1,5 +1,5 @@
 import os, argparse, sys
-from src.steak import Steak
+from src.steak import Steak, ERR_FILE_PATH
 
 title = '''
 ,d88~~\   d8   ,e,         888   _                 ,d88~~\   d8                       888   _   
@@ -9,19 +9,39 @@ title = '''
    8888  888   888 Y888    888 Y88b     Y             8888  888   Y888    , C888  888 888 Y88b  
 \__88P'  "88_/ 888  "88__/ 888  Y88b   /           \__88P'  "88_/  "88___/   "88_-888 888  Y88b 
                                      _/                                                         '''
+def file_args(file_path: str, sticky: Steak):
+  args = sticky.args
+  
+  if args.combine == True:
+    print(f"{ERR_FILE_PATH} Cannot combine {args.file1} with nothing")
+
+  elif args.subtract == True:
+    print(f"{ERR_FILE_PATH} Cannot subtract the contents of {args.file1} with nothing")
+
+  elif sticky.fmt == True:
+    out = sticky.convert_json()
+
+  if len(out) > 0:
+    out = Steak.get_json(out)
+
+  if args.output != None:
+    if len(out) > 0:
+      sticky.write_json(out)
+  
+  elif args.output == None:
+    sticky.display_output(out)
 
 
 def main():
   parser = argparse.ArgumentParser(description="None")
-  parser.add_argument("-1", "--file1", action="store", help="The first input file", required=True)
-  parser.add_argument("-2", "--file2", action="store", help="The second input file", required=True)
+  parser.add_argument("-1", "--file1", action="store", help="The first input file", required=False)
+  parser.add_argument("-2", "--file2", action="store", help="The second input file", required=False)
   parser.add_argument("-c", "--combine", action="store_true", help="Combine 2 files together and remove duplicate lines")
-  parser.add_argument("-d", "--difference", action="store_true", help="Get the difference between 2 files")
   parser.add_argument("-o", "--output", action="store", help="Write the new output to a file")
-  parser.add_argument("--ft", action="store", help="Write output to a specific file type. Options [txt, json]")
-  parser.add_argument("-D", "--debug", action="store_true", help="Display all characters including unprintables")
+  parser.add_argument("--debug", action="store_true", help="Display debug information / messages")
+  parser.add_argument("-p", "--pretty", action="store_true", help="Display the raw formatted json output")
   parser.add_argument("-s", "--subtract", action="store_true", help="Subtract lines from file2 using contents of file1")
-  parser.add_argument("-r", "--ref", action="store", help="Show each reference for each line if any. File1 or 2 must be in json format")
+  parser.add_argument("-r", "--ref", action="store_true", help="Does the same as --subtract, but only shows duplicate items")
 
   sys_args = sys.argv
   for i in sys_args:
@@ -34,35 +54,41 @@ def main():
   sticky = Steak(args, full_path)
   out = []
 
+  if args.combine != True and args.subtract != True:
+    sticky.fmt = True
+
   if args.file1 != None and args.file2 != None:
     
+    if args.ref == True and args.subtract == False:
+      args.subtract = True
+      sticky.args.subtract = True
+
     if args.combine == True:
       out = sticky.get_combined_output()
 
-    elif args.difference == True:
-      out = sticky.get_difference()
-
     elif args.subtract == True:
+      sticky.show_refs = args.ref
       out = sticky.subtract_from()
 
-    if args.ft != None:
-      if args.ft == "json":
-        out = Steak.get_json(out)
+    if len(out) > 0:
+      out = Steak.get_json(out)
 
-    if args.output != None and len(out) > 0:
-      if args.ft == "txt":
-        sticky.write_output(out)
-      elif args.ft == "json":
+    if args.output != None:
+      if len(out) > 0:
         sticky.write_json(out)
-      else:
-        sticky.write_output(out)
     
     elif args.output == None:
-      if args.ft == None or args.ft == "txt":
-        for i in out:
-          sticky.display_output(i)
-      else:
-        sticky.display_output(out)
+      sticky.display_output(out)
+
+  elif args.file1 != None and args.file2 == None:
+    file_args(args.file1, sticky)
+  
+  elif args.file1 == None and args.file2 != None:
+    file_args(args.file2, sticky)
+
+  else:
+    print(f"Error: No file(s) specified - Use python {Steak.get_script_name(sys.argv[0])} -h for help")
+    return
 
 
 if __name__ == "__main__":
