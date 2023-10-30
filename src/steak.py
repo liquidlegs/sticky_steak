@@ -150,7 +150,7 @@ class Steak:
           output.append(i)
           break
 
-
+    output = Steak.separate_items_and_ref(output)
     return output
 
 
