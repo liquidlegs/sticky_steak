@@ -59,6 +59,9 @@ def main():
 
   if args.file1 != None and args.file2 != None:
     
+    if sticky.count_args() < 1:
+      print("Error: File paths have been provided, but no options specified - No action taken.")
+
     if args.ref == True and args.subtract == False:
       args.subtract = True
       sticky.args.subtract = True
@@ -72,6 +75,7 @@ def main():
 
     if len(out) > 0:
       out = Steak.get_json(out)
+    else: return
 
     if args.output != None:
       if len(out) > 0:

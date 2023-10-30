@@ -38,6 +38,27 @@ class Steak:
     return output
 
 
+  def count_args(self):
+    counter = 0
+
+    if self.args.combine == True:
+      counter += 1
+    
+    if self.args.subtract == True:
+      counter += 1
+
+    if self.args.pretty == True:
+      counter += 1
+
+    if self.args.ref == True:
+      counter += 1
+
+    if self.args.output != None:
+      counter += 1
+    
+    return counter
+
+
   def get_file_type(filename: str) -> FileTypes:
     '''Determines the file type and returns the extension as an enum.'''
     
@@ -325,14 +346,14 @@ class Steak:
     return output
 
 
-  def remove_empties(refs: list):
-    output = deepcopy(refs)
+  # def remove_empties(refs: list):
+  #   output = deepcopy(refs)
 
-    if len(output) == 1:
-      if output[0] == "[]":
-        output.clear()
+  #   if len(output) == 1:
+  #     if output[0] == "[]":
+  #       output.clear()
     
-    return output
+  #   return output
 
 
   def get_json(contents: list):
