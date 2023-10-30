@@ -125,7 +125,7 @@ class Steak:
     for i in master_list:
 
       for idx in range(len(dup_list)):
-        if i[0] == dup_list[idx][0] and i[1] != []:
+        if i[0] == dup_list[idx][0] and i[1] != [] and i[1] != [""]:
           output.append(i)
           break
 
@@ -172,39 +172,39 @@ class Steak:
     return output
 
 
-  def write_output(self, content: list):
-    '''Function write output to a file.'''
+  # def write_output(self, content: list):
+  #   '''Function write output to a file.'''
 
-    output = self.args.output
-    ext = self.args.ft
-    lines = ""
+  #   output = self.args.output
+  #   ext = self.args.ft
+  #   lines = ""
     
-    # Check if filename and ext are empty or not.
-    if output == None:
-      output = "output.txt"
+  #   # Check if filename and ext are empty or not.
+  #   if output == None:
+  #     output = "output.txt"
 
-    if ext == None:
-      ext = "txt"
+  #   if ext == None:
+  #     ext = "txt"
 
-    if len(content) < 1:
-      print(f"Nothing to write to file [{output}]")
-      return
+  #   if len(content) < 1:
+  #     print(f"Nothing to write to file [{output}]")
+  #     return
 
-    # Code block adds a new line to the end of each line if not already present.
-    for i in content:
-      temp_ln = i
-      if len(temp_ln) > 0 and temp_ln[len(temp_ln)-1] != "\n":
-        temp_ln += "\n"
+  #   # Code block adds a new line to the end of each line if not already present.
+  #   for i in content:
+  #     temp_ln = i
+  #     if len(temp_ln) > 0 and temp_ln[len(temp_ln)-1] != "\n":
+  #       temp_ln += "\n"
 
-      lines += temp_ln
+  #     lines += temp_ln
   
-    # Writes content to a file.
-    filepath = f"{self.full_path}\\{output}.{ext}"
-    with open(filepath, "w") as f:
-      n_bytes = f.write(lines)
+  #   # Writes content to a file.
+  #   filepath = f"{self.full_path}\\{output}.{ext}"
+  #   with open(filepath, "w") as f:
+  #     n_bytes = f.write(lines)
       
-      if n_bytes > 0:
-        print(f"Successfully wrote {len(content)} lines ({n_bytes}) bytes to file '{filepath}'")
+  #     if n_bytes > 0:
+  #       print(f"Successfully wrote {len(content)} lines ({n_bytes}) bytes to file '{filepath}'")
 
 
   def write_json(self, content: str):
@@ -321,9 +321,6 @@ class Steak:
         ref = []
 
       output.append([item, ref])
-    
-    for i in ref:
-      print(i)
 
     return output
 
@@ -346,8 +343,8 @@ class Steak:
     }
 
     for i in contents:
-      clean_ref = Steak.remove_empties(i[1])
-      output["data"].append({"ioc": i[0], "ref": clean_ref})
+      # clean_ref = Steak.remove_empties(i[1])
+      output["data"].append({"ioc": i[0], "ref": i[1]})
 
     output_json = json.dumps(output, indent=2)
     return output_json
