@@ -318,13 +318,27 @@ class Steak:
     # This code block will remove all duplicate ref_elements stored in each ref.
     c_refs = deepcopy(refs)
     for i in range(len(c_refs)):
-      refs[i] = list(set(c_refs[i]))
+      refs[i] = Steak.split_refs(c_refs[i])
 
     # Code block will create a double indexed list from items and refs
     output = []
     for i in range(len(items)):
       output.append([items[i], refs[i]])
 
+    return output
+
+
+  def split_refs(refs: list):
+    output = []
+
+    if len(refs) == 0:
+      return refs
+
+    for i in refs:
+      element = i.split(",")
+      output.extend(element)
+
+    output = list(set(output))
     return output
 
 
