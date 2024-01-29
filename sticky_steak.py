@@ -42,6 +42,10 @@ def main():
   parser.add_argument("-p", "--pretty", action="store_true", help="Display the raw formatted json output")
   parser.add_argument("-s", "--subtract", action="store_true", help="Subtract lines from file2 using contents of file1")
   parser.add_argument("-r", "--ref", action="store_true", help="Does the same as --subtract, but only shows duplicate items")
+  parser.add_argument("-t", "--ctime", action="store", help="Adds a custom date to an investigation for a particular ioc")
+  parser.add_argument("-O", "--overwrite-date", action="store_true", help="Overwrites the date in an investigation with current date/time")
+  parser.add_argument("-d", "--delim", action="store")
+  parser.add_argument("-P", "--priority", action="store", help="Defines how often an ioc should be reinvestigated. Options: [p1, p2, p3, p4, p5]")
 
   sys_args = sys.argv
   for i in sys_args:
@@ -74,7 +78,7 @@ def main():
       out = sticky.subtract_from()
 
     if len(out) > 0:
-      out = Steak.get_json(out)
+      out = Steak.get_json(args, out)
     else: return
 
     if args.output != None:

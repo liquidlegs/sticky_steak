@@ -1,8 +1,10 @@
 import json, enum
 from copy import deepcopy
 from platform import system
+from datetime import date
 
 ERR_FILE_PATH = "Error: Only one file path has been provided."
+SPL_LN_DELIM = ":"
 
 class FileTypes(enum.Enum):
   Nan = 0
@@ -19,6 +21,10 @@ class Steak:
     self.fmt = fmt                              # 
     self.show_refs = show_refs                  # Shows all items with associated refs
     self.full_path = full_path                  # The full path to the file.
+    self.spl_delim = args.delim
+
+    if self.spl_delim == None:
+      self.spl_delim = SPL_LN_DELIM
 
 
   def get_script_name(file_path: str):
@@ -39,6 +45,8 @@ class Steak:
 
 
   def count_args(self):
+    '''Function prevents the user from specifying files via the commandline and not perfomring an action with any of the data.'''
+
     counter = 0
 
     if self.args.combine == True:
@@ -54,6 +62,18 @@ class Steak:
       counter += 1
 
     if self.args.output != None:
+      counter += 1
+
+    if self.overwrite_date == True:
+      counter += 1
+
+    if self.ctime != None:
+      counter += 1
+
+    if self.delim != None:
+      counter += 1
+
+    if self.priority != None:
       counter += 1
     
     return counter
@@ -85,13 +105,13 @@ class Steak:
     # Opens both files, converts each character to lower case and splits the lines in multiple lists.
     if ftype_1 != FileTypes.Json:
       with open(file_path_1) as f:
-        f1_lines = Steak.double_split_lines(f.read().lower().split("\n"))
+        f1_lines = Steak.double_split_lines(f.read().lower().split("\n"), self.spl_delim)
     else:
       f1_lines = Steak.read_json(file_path_1)
 
     if ftype_2 != FileTypes.Json:
       with open(file_path_2) as f:
-        f2_lines = Steak.double_split_lines(f.read().lower().split("\n"))
+        f2_lines = Steak.double_split_lines(f.read().lower().split("\n"), self.spl_delim)
     else:
       f2_lines = Steak.read_json(file_path_2)
 
@@ -113,7 +133,7 @@ class Steak:
 
     if f_type != FileTypes.Json:
       with open(file_path) as f:
-        lines = Steak.double_split_lines(f.read().lower().split("\n"))
+        lines = Steak.double_split_lines(f.read().lower().split("\n"), self.spl_delim)
     else:
       lines = Steak.read_json(file_path)
 
@@ -136,7 +156,42 @@ class Steak:
       combined_lines.append(i)
 
     # Combines the contents of each list and removes all duplicates.
+    c_combined_content = []
+    d_combined_content = []
     combined_content = Steak.separate_items_and_ref(combined_lines)
+
+    for i in combined_lines:
+
+      for idx in combined_content:
+
+        if i[0] == idx[0]:
+
+          if len(i) < 3:
+            new_item = idx
+            new_item.append(None)
+            new_item.append(None)
+            new_item.append(None)
+            c_combined_content.append(new_item)
+          
+          elif len(i) < 5 and len(i) > 2:
+            new_item = idx
+            new_item.append(i[2])
+            new_item.append(i[3])
+            new_item.append(None)
+            c_combined_content.append(new_item)
+          
+          elif len(i) == 5:
+            new_item = idx
+            new_item.append(i[2])
+            new_item.append(i[3])
+            new_item.append(i[4])
+            c_combined_content.append(new_item)
+
+            
+    for i in c_combined_content:
+      d_combined_content.append(i[:5])
+
+    combined_content = d_combined_content
     return combined_content
 
 
@@ -191,41 +246,6 @@ class Steak:
       output.append([i, []])
 
     return output
-
-
-  # def write_output(self, content: list):
-  #   '''Function write output to a file.'''
-
-  #   output = self.args.output
-  #   ext = self.args.ft
-  #   lines = ""
-    
-  #   # Check if filename and ext are empty or not.
-  #   if output == None:
-  #     output = "output.txt"
-
-  #   if ext == None:
-  #     ext = "txt"
-
-  #   if len(content) < 1:
-  #     print(f"Nothing to write to file [{output}]")
-  #     return
-
-  #   # Code block adds a new line to the end of each line if not already present.
-  #   for i in content:
-  #     temp_ln = i
-  #     if len(temp_ln) > 0 and temp_ln[len(temp_ln)-1] != "\n":
-  #       temp_ln += "\n"
-
-  #     lines += temp_ln
-  
-  #   # Writes content to a file.
-  #   filepath = f"{self.full_path}\\{output}.{ext}"
-  #   with open(filepath, "w") as f:
-  #     n_bytes = f.write(lines)
-      
-  #     if n_bytes > 0:
-  #       print(f"Successfully wrote {len(content)} lines ({n_bytes}) bytes to file '{filepath}'")
 
 
   def write_json(self, content: str):
@@ -342,11 +362,11 @@ class Steak:
     return output
 
 
-  def double_split_lines(content: list):
+  def double_split_lines(content: list, delim: str):
     output = []
 
     for i in content:
-      line_chunks = i.split(":")
+      line_chunks = i.split(delim)
 
       if len(line_chunks) > 1:
         item = line_chunks[0]
@@ -360,32 +380,89 @@ class Steak:
     return output
 
 
-  # def remove_empties(refs: list):
-  #   output = deepcopy(refs)
-
-  #   if len(output) == 1:
-  #     if output[0] == "[]":
-  #       output.clear()
-    
-  #   return output
-
-
-  def get_json(contents: list):
+  def get_json(args, contents: list):
     '''Creates a json object out the contents of each file.'''
 
     output = {
       "data": []
     }
 
+    first_seen = None             # Defines the first and last time that an ioc was investigated.
+    last_seen = None
+
+    # Sets tje prioirty to the value as specified by the user.
+    if args.priority != None:
+      sev = args.priority.upper()
+    else:
+      sev = None
+
     for i in contents:
-      # clean_ref = Steak.remove_empties(i[1])
-      output["data"].append({"ioc": i[0], "ref": i[1]})
+
+      # The first seen value should only be created when the first_seen value is null.
+      if i[2] == None:
+        first_seen = str(date.today())
+      else:
+        first_seen = i[2]
+
+      # Creates the last seen field and sets it to the current date.
+      if i[3] == None:
+        last_seen = str(date.today())
+      
+      # Overwrites the date if the flag is set to true.
+      if args.overwrite_date == True:
+        last_seen = str(date.today())
+      
+      # Overwrites the date with a custom date entered via the commandline.
+      if args.ctime != None:
+        last_seen = convert_string_to_date(args.ctime)
+        
+        if last_seen != None:
+          last_seen = str(last_seen)
+        else:
+          last_seen = i[3]
+      
+      else:
+        last_seen = i[3]
+
+      # Sets the priority to P5 as the default or whatever is stored in the file.
+      if i[4] == None:
+        if sev == None:
+          sev = "P5"
+      elif i[4] != None:
+        sev = i[4]
+      
+      # Santize input that the user has provided.
+      elif sev != None:
+        if sev == "p5":
+          sev = "P5"
+        elif sev == "p4".upper():
+          sev = "P4"
+        elif sev == "p3".upper():
+          sev = "P3"
+        elif sev == "p2".upper():
+          sev = "P2"
+        elif sev == "p1".upper():
+          sev = "P1"
+        else:
+          sev = "P5"
+
+      output["data"].append(
+        {
+          "ioc": i[0],
+          "ref": i[1],
+          "first_seen": first_seen,
+          "last_seen": last_seen,
+          "priority": sev
+        }
+      )
 
     output_json = json.dumps(output, indent=2)
     return output_json
   
 
   def check_json_error(data, key):
+    '''Catches all json key errors in a separate function to prevent the program crashing in the middle of a loop.'''
+
     out = None
     
     try:
@@ -396,6 +473,8 @@ class Steak:
 
 
   def read_json(filename: str):
+    '''Reads in the json file as a python list.'''
+    
     lines = []
     json_obj = None
 
@@ -409,8 +488,38 @@ class Steak:
     for i in data:
       ioc = Steak.check_json_error(i, "ioc")
       ref = Steak.check_json_error(i, "ref")
+      first_seen = Steak.check_json_error(i, "first_seen")
+      last_seen = Steak.check_json_error(i, "last_seen")
+      sev = Steak.check_json_error(i, "priority")
 
       if ioc != None and ioc != "":
-        lines.append([ioc, ref])
+        lines.append([ioc, ref, first_seen, last_seen, sev])
 
     return lines
+  
+
+def convert_string_to_date(custom_date: str) -> date:
+  '''Converts a date as a string to a datetime object.'''
+  
+  dt = []
+  delim = ""
+
+  if "-" in custom_date:
+    delim = "-"
+  elif "/" in custom_date:
+    delim = "/"
+
+  if delim == "":
+    print("Error: date is in unknown format. Please use dd/mm/yyyy or dd-mm-yyyy")
+    return
+  
+  cdate = custom_date.split(delim)
+  for i in cdate:
+    dt.append(int(i))
+
+  if len(dt) < 1:
+    print(f"Error: unable to convert {custom_date} to datetime format")
+    return
+  
+  out = date(dt[0], dt[1], dt[2])
+  return out
