@@ -22,7 +22,17 @@ def file_args(file_path: str, sticky: Steak):
     out = sticky.convert_json()
 
   if len(out) > 0:
-    out = Steak.get_json(out)
+    c_content = []
+
+    for i in out:
+      if len(i) < 3:
+        new_item = i
+        new_item.append(None)                # First_seen.
+        new_item.append(None)                # Last_seen
+        new_item.append(None)                # Priority
+        c_content.append(new_item)
+
+    out = Steak.get_json(args, c_content)
 
   if args.output != None:
     if len(out) > 0:

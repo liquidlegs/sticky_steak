@@ -422,7 +422,8 @@ class Steak:
           last_seen = i[3]
       
       else:
-        last_seen = i[3]
+        if i[3] != None:
+          last_seen = i[3]
 
       # Sets the priority to P5 as the default or whatever is stored in the file.
       if i[4] == None:
