@@ -64,10 +64,11 @@ def main():
       print(f"\n\n{title}\n\n")
       break
 
-  C.enable_colour_terminal()
   args = parser.parse_args()
   full_path = os.getcwd()
   sticky = Steak(args, full_path)
+  
+  C.enable_colour_terminal()
   out = []
 
   if args.combine != True and args.subtract != True:

@@ -103,16 +103,16 @@ class Steak():
     if self.args.output != None:
       counter += 1
 
-    if self.overwrite_date == True:
+    if self.args.overwrite_date == True:
       counter += 1
 
-    if self.ctime != None:
+    if self.args.ctime != None:
       counter += 1
 
     if self.delim != None:
       counter += 1
 
-    if self.priority != None:
+    if self.args.priority != None:
       counter += 1
     
     return counter
