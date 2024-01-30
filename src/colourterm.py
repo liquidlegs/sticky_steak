@@ -58,131 +58,131 @@ class ColourTerm():
   BR_B_WHITE =          "\x1b[107m"
 
 
-  def fg_black(text: str) -> str:
+  def fd_black(text: str) -> str:
     return f"{ColourTerm.F_BLACK}{text}{ColourTerm.ALL_DEFAULT}"
 
 
-  def fg_red(text: str) -> str:
+  def fd_red(text: str) -> str:
     return f"{ColourTerm.F_RED}{text}{ColourTerm.ALL_DEFAULT}"
 
 
-  def fg_green(text: str) -> str:
+  def fd_green(text: str) -> str:
     return f"{ColourTerm.F_GREEN}{text}{ColourTerm.ALL_DEFAULT}"
 
 
-  def fg_yellow(text: str) -> str:
+  def fd_yellow(text: str) -> str:
     return f"{ColourTerm.F_YELLOW}{text}{ColourTerm.ALL_DEFAULT}"
 
 
-  def fg_blue(text: str) -> str:
+  def fd_blue(text: str) -> str:
     return f"{ColourTerm.F_BLUE}{text}{ColourTerm.ALL_DEFAULT}"
 
 
-  def fg_magenta(text: str) -> str:
+  def fd_magenta(text: str) -> str:
     return f"{ColourTerm.F_MAGENTA}{text}{ColourTerm.ALL_DEFAULT}"
 
 
-  def fg_cyan(text: str) -> str:
+  def fd_cyan(text: str) -> str:
     return f"{ColourTerm.F_CYAN}{text}{ColourTerm.ALL_DEFAULT}"
 
 
-  def fg_white(text: str) -> str:
+  def fd_white(text: str) -> str:
     return f"{ColourTerm.F_WHITE}{text}{ColourTerm.ALL_DEFAULT}"
 
 
-  def bg_black(text: str) -> str:
+  def bd_black(text: str) -> str:
     return f"{ColourTerm.B_BLACK}{text}{ColourTerm.ALL_DEFAULT}"
 
 
-  def bg_red(text: str) -> str:
+  def bd_red(text: str) -> str:
     return f"{ColourTerm.B_RED}{text}{ColourTerm.ALL_DEFAULT}"
 
 
-  def bg_green(text: str) -> str:
+  def bd_green(text: str) -> str:
     return f"{ColourTerm.B_GREEN}{text}{ColourTerm.ALL_DEFAULT}"
 
 
-  def bg_yellow(text: str) -> str:
+  def bd_yellow(text: str) -> str:
     return f"{ColourTerm.B_YELLOW}{text}{ColourTerm.ALL_DEFAULT}"
 
 
-  def bg_blue(text: str) -> str:
+  def bd_blue(text: str) -> str:
     return f"{ColourTerm.B_BLUE}{text}{ColourTerm.ALL_DEFAULT}"
 
 
-  def bg_magenta(text: str) -> str:
+  def bd_magenta(text: str) -> str:
     return f"{ColourTerm.B_MAGENTA}{text}{ColourTerm.ALL_DEFAULT}"
 
 
-  def bg_cyan(text: str) -> str:
+  def bd_cyan(text: str) -> str:
     return f"{ColourTerm.B_CYAN}{text}{ColourTerm.ALL_DEFAULT}"
 
 
-  def bg_white(text: str) -> str:
+  def bd_white(text: str) -> str:
     return f"{ColourTerm.B_WHITE}{text}{ColourTerm.ALL_DEFAULT}"
   
 
-  def br_fg_black(text: str) -> str:
+  def f_black(text: str) -> str:
     return f"{ColourTerm.BR_F_BLACK}{text}{ColourTerm.ALL_DEFAULT}"
   
 
-  def br_fg_red(text: str) -> str:
+  def f_red(text: str) -> str:
     return f"{ColourTerm.BR_F_RED}{text}{ColourTerm.ALL_DEFAULT}"
   
   
-  def br_fg_green(text: str) -> str:
+  def f_green(text: str) -> str:
     return f"{ColourTerm.BR_F_GREEN}{text}{ColourTerm.ALL_DEFAULT}"
 
 
-  def br_fg_yellow(text: str) -> str:
+  def f_yellow(text: str) -> str:
     return f"{ColourTerm.BR_F_YELLOW}{text}{ColourTerm.ALL_DEFAULT}"
   
 
-  def br_fg_blue(text: str) -> str:
+  def f_blue(text: str) -> str:
     return f"{ColourTerm.BR_F_BLUE}{text}{ColourTerm.ALL_DEFAULT}"
   
 
-  def br_fg_magenta(text: str) -> str:
+  def f_magenta(text: str) -> str:
     return f"{ColourTerm.BR_F_MAGENTA}{text}{ColourTerm.ALL_DEFAULT}"
   
 
-  def br_fg_cyan(text: str) -> str:
+  def f_cyan(text: str) -> str:
     return f"{ColourTerm.BR_F_CYAN}{text}{ColourTerm.ALL_DEFAULT}"
   
 
-  def br_fg_white(text: str) -> str:
+  def f_white(text: str) -> str:
     return f"{ColourTerm.BR_F_WHITE}{text}{ColourTerm.ALL_DEFAULT}"
   
   
-  def br_bg_black(text: str) -> str:
+  def b_black(text: str) -> str:
     return f"{ColourTerm.BR_B_BLACK}{text}{ColourTerm.ALL_DEFAULT}"
   
   
-  def br_bg_red(text: str) -> str:
+  def b_red(text: str) -> str:
     return f"{ColourTerm.BR_B_RED}{text}{ColourTerm.ALL_DEFAULT}"
   
   
-  def br_bg_green(text: str) -> str:
+  def b_green(text: str) -> str:
     return f"{ColourTerm.BR_B_GREEN}{text}{ColourTerm.ALL_DEFAULT}"
   
   
-  def br_bg_yellow(text: str) -> str:
+  def b_yellow(text: str) -> str:
     return f"{ColourTerm.BR_B_YELLOW}{text}{ColourTerm.ALL_DEFAULT}"
   
   
-  def br_bg_blue(text: str) -> str:
+  def b_blue(text: str) -> str:
     return f"{ColourTerm.BR_B_BLUE}{text}{ColourTerm.ALL_DEFAULT}"
   
   
-  def br_bg_magenta(text: str) -> str:
+  def b_magenta(text: str) -> str:
     return f"{ColourTerm.BR_B_MAGENTA}{text}{ColourTerm.ALL_DEFAULT}"
   
   
-  def br_bg_cyan(text: str) -> str:
+  def b_cyan(text: str) -> str:
     return f"{ColourTerm.BR_B_CYAN}{text}{ColourTerm.ALL_DEFAULT}"
   
   
-  def br_bg_white(text: str) -> str:
+  def b_white(text: str) -> str:
     return f"{ColourTerm.BR_B_WHITE}{text}{ColourTerm.ALL_DEFAULT}"
 
   

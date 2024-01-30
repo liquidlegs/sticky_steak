@@ -86,7 +86,11 @@ ipython_config.py
 /json
 /txt
 testing.txt
+textfile.txt
+test.json
+out.json
 notes
+config.json
 
 # pyenv
 #   For a library or package, you might want to ignore these files since the code is

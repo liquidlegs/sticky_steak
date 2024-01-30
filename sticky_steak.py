@@ -1,5 +1,6 @@
 import os, argparse, sys
 from src.steak import Steak, ERR_FILE_PATH
+from src.colourterm import ColourTerm as C
 
 title = '''
 ,d88~~\   d8   ,e,         888   _                 ,d88~~\   d8                       888   _   
@@ -32,7 +33,7 @@ def file_args(file_path: str, sticky: Steak):
         new_item.append(None)                # Priority
         c_content.append(new_item)
 
-    out = Steak.get_json(args, c_content)
+    out = sticky.get_json(args, c_content)
 
   if args.output != None:
     if len(out) > 0:
@@ -63,6 +64,7 @@ def main():
       print(f"\n\n{title}\n\n")
       break
 
+  C.enable_colour_terminal()
   args = parser.parse_args()
   full_path = os.getcwd()
   sticky = Steak(args, full_path)
@@ -88,7 +90,7 @@ def main():
       out = sticky.subtract_from()
 
     if len(out) > 0:
-      out = Steak.get_json(args, out)
+      out = sticky.get_json(args, out)
     else: return
 
     if args.output != None:
@@ -98,7 +100,7 @@ def main():
     elif args.output == None:
       sticky.display_output(out)
 
-  elif args.file1 != None and args.file2 == None:
+  elif args.file1 != None and args.file2 == None:    
     file_args(args.file1, sticky)
   
   elif args.file1 == None and args.file2 != None:

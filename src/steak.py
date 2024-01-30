@@ -1,7 +1,8 @@
-import json, enum
+import json, enum, os
 from copy import deepcopy
 from platform import system
 from datetime import date
+from src.colourterm import ColourTerm as C
 
 ERR_FILE_PATH = "Error: Only one file path has been provided."
 SPL_LN_DELIM = ":"
@@ -12,19 +13,57 @@ class FileTypes(enum.Enum):
   Json = 2
 
 
-class Steak:
+class Steak():
 
   def __init__(self, args, full_path: str, fmt=False, show_refs=False):
     self.args = args                            # Program arguments.
     self.debug = args.debug                     # Display debug message when if true.
     self.pretty = args.pretty
-    self.fmt = fmt                              # 
+    self.fmt = fmt
     self.show_refs = show_refs                  # Shows all items with associated refs
     self.full_path = full_path                  # The full path to the file.
     self.spl_delim = args.delim
+    self.config = None
+    self.enable_colour = C.enable_colour_terminal()
 
     if self.spl_delim == None:
       self.spl_delim = SPL_LN_DELIM
+
+    self.dprint("Searching for config file")
+
+    if self.config_exists() == True:
+      self.dprint("Config file exists")
+      self.config = self.load_config_file()
+
+      if self.config != None:
+        self.dprint("Successfully loaded config file")
+    else:
+      self.config = Steak.generate_config_string()
+      self.dprint("Generating config string")
+
+
+  def dprint(self, text: str):
+    if self.debug == True:
+      if self.enable_colour == True:
+        print(f"{C.f_red('Debug')} {C.fd_cyan('=>')} {C.fd_yellow(text)}")
+      else:
+        print(f"Debug => {text}")
+
+
+  def err(self, text: str):
+    if self.enable_colour == True:
+      print(f"{C.f_red('Error')}: {text}")
+    else:
+      print(f"Error: {text}")
+
+
+  def get_delim():
+    delim = "/"
+
+    if system().lower() == "windows":
+      delim = "\\"
+
+    return delim
 
 
   def get_script_name(file_path: str):
@@ -121,6 +160,7 @@ class Steak:
 
   def convert_json(self) -> list:
     '''Function converts text file into the json format'''
+    
     lines = []
     file_path = ""
 
@@ -143,6 +183,7 @@ class Steak:
 
   def get_combined_output(self) -> list:
     '''Function combines 2 files together and then removes duplicate lines.'''
+    
     combined_lines = []
     
     pair = self.parse_files()
@@ -211,6 +252,7 @@ class Steak:
 
   def subtract_from(self) -> list:
     '''Function removes the contents of file2 that exists in file1'''
+    
     f1_items = []
     f2_items = []
     subtracted_list = []
@@ -268,10 +310,8 @@ class Steak:
 
 
   def display_output(self, text: str):
-    if self.debug == True:
-      print(repr(text))
 
-    elif self.pretty == True:
+    if self.pretty == True:
       print(text)
     
     else:
@@ -280,7 +320,7 @@ class Steak:
       try:
         json_data = json.loads(text)
       except json.JSONDecodeError:
-        print("Unable to display output - JsonDecodeError")
+        self.err("Unable to display output - JsonDecodeError")
       
       data = Steak.check_json_error(json_data, "data")
       
@@ -380,7 +420,7 @@ class Steak:
     return output
 
 
-  def get_json(args, contents: list):
+  def get_json(self, args, contents: list):
     '''Creates a json object out the contents of each file.'''
 
     output = {
@@ -414,7 +454,7 @@ class Steak:
       
       # Overwrites the date with a custom date entered via the commandline.
       if args.ctime != None:
-        last_seen = convert_string_to_date(args.ctime)
+        last_seen = self.convert_string_to_date(args.ctime)
         
         if last_seen != None:
           last_seen = str(last_seen)
@@ -499,28 +539,97 @@ class Steak:
     return lines
   
 
-def convert_string_to_date(custom_date: str) -> date:
-  '''Converts a date as a string to a datetime object.'''
-  
-  dt = []
-  delim = ""
+  def convert_string_to_date(self, custom_date: str) -> date:
+    '''Converts a date as a string to a datetime object.'''
+    
+    dt = []
+    delim = ""
 
-  if "-" in custom_date:
-    delim = "-"
-  elif "/" in custom_date:
+    if "-" in custom_date:
+      delim = "-"
+    elif "/" in custom_date:
+      delim = "/"
+
+    if delim == "":
+      self.err("date is in unknown format. Please use dd/mm/yyyy or dd-mm-yyyy")
+      return
+    
+    cdate = custom_date.split(delim)
+    for i in cdate:
+      dt.append(int(i))
+
+    if len(dt) < 1:
+      self.err(f"unable to convert {custom_date} to datetime format")
+      return
+    
+    out = date(dt[0], dt[1], dt[2])
+    return out
+
+
+  def auto_generate_config():
+    '''Function writes the default config file to the root of the project directory.'''
+
+    output = {
+      "p5": 365,
+      "p4": 180,
+      "p3": 120,
+      "p2": 40,
+      "p1": 7
+    }
+
+    content = json.dumps(output, indent=2)
+    with open("config.json", "w") as f:
+      f.write(content)
+
+  
+  def generate_config_string() -> dict:
+    output = {
+      "p5": 365,
+      "p4": 180,
+      "p3": 120,
+      "p2": 40,
+      "p1": 7
+    }
+
+    return output
+
+
+  def load_config_file(self) -> dict:
+    path = f"{self.full_path}{Steak.get_delim()}config.json"
+    buffer = ""
+    output = ""
+
+    with open(path, "r") as f:
+      buffer = f.read()
+
+    try:
+      output = json.loads(buffer)
+    except Exception as e:
+      self.err("failed to load config file")
+    
+    return output
+
+
+  def config_exists(self) -> bool:
+    '''Function checks if the file config file exists and returns a boolean if so.'''
+    
     delim = "/"
 
-  if delim == "":
-    print("Error: date is in unknown format. Please use dd/mm/yyyy or dd-mm-yyyy")
-    return
-  
-  cdate = custom_date.split(delim)
-  for i in cdate:
-    dt.append(int(i))
+    if system().lower() == "windows":
+      delim = "\\"
 
-  if len(dt) < 1:
-    print(f"Error: unable to convert {custom_date} to datetime format")
-    return
-  
-  out = date(dt[0], dt[1], dt[2])
-  return out
+    # Code block checks if the config file exists and if so returns True.
+    # However if not the case, the config will be generated and checked again.
+    full_path = os.getcwd() + delim + "config.json"
+    if os.path.exists(full_path) == True:
+      return True
+    else:
+      self.dprint("Generating default config file")
+      Steak.auto_generate_config()
+
+    # If the config still does exist after being generated, there is likely a 
+    # permission issue preventing the file from written to the disk.
+    if os.path.exists(full_path) == True:
+      return True
+    else:
+      return False
