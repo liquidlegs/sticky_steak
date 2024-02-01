@@ -3,6 +3,7 @@ from copy import deepcopy
 from platform import system
 from datetime import date, timedelta
 from src.colourterm import ColourTerm as C
+C.enable_colour_terminal()
 
 ERR_FILE_PATH = "Error: Only one file path has been provided."
 SPL_LN_DELIM = ":"
@@ -244,8 +245,6 @@ class Steak():
     for i in c_combined_content:
       d_combined_content.append(i[:5])
 
-    # test = list(set(d_combined_content))
-
     return d_combined_content
 
 
@@ -372,8 +371,21 @@ class Steak():
             result = today - seen
 
             if result.days > target:
+              rsev = sev.upper()
+
+              if rsev == "P1":
+                rsev = C.b_red(C.f_white(rsev))
+              elif rsev == "P2":
+                rsev = C.f_red(rsev)
+              elif rsev == "P3":
+                rsev = C.f_yellow(rsev)
+              elif rsev == "P4":
+                rsev = C.f_green(rsev)
+              elif rsev == "P5":
+                rsev = C.f_blue(rsev)
+
               print(
-                f"{item} -- {ref} | {sev} ({C.f_red('IOC is >= ' + str(C.f_yellow(target)) + C.f_red(' days old and should be re-investigated'))})"
+                f"[{' '*3}{rsev}{' '*3}] {item} -- {ref} | {sev})"
               )    
             else:
               print(f"{item} -- {ref}")
