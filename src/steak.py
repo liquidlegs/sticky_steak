@@ -1,11 +1,12 @@
 import json, enum, os
 from copy import deepcopy
 from platform import system
-from datetime import date
+from datetime import date, timedelta
 from src.colourterm import ColourTerm as C
 
 ERR_FILE_PATH = "Error: Only one file path has been provided."
 SPL_LN_DELIM = ":"
+
 
 class FileTypes(enum.Enum):
   Nan = 0
@@ -16,15 +17,15 @@ class FileTypes(enum.Enum):
 class Steak():
 
   def __init__(self, args, full_path: str, fmt=False, show_refs=False):
-    self.args = args                            # Program arguments.
-    self.debug = args.debug                     # Display debug message when if true.
-    self.pretty = args.pretty
-    self.fmt = fmt
-    self.show_refs = show_refs                  # Shows all items with associated refs
-    self.full_path = full_path                  # The full path to the file.
-    self.spl_delim = args.delim
-    self.config = None
-    self.enable_colour = C.enable_colour_terminal()
+    self.args = args                                # Program arguments.
+    self.debug = args.debug                         # Display debug message when if true.
+    self.pretty = args.pretty                       # Displays output as well formatted json.
+    self.fmt = fmt                                  # Allows file contents to be printed if combine and subtract flags are == None
+    self.show_refs = show_refs                      # Shows all items with associated refs.
+    self.full_path = full_path                      # The full path to the file.
+    self.spl_delim = args.delim                     # Controls how refs are added.
+    self.config = None                              # Holds the config file.
+    self.enable_colour = C.enable_colour_terminal() # Enables coloured text.
 
     if self.spl_delim == None:
       self.spl_delim = SPL_LN_DELIM
@@ -109,7 +110,7 @@ class Steak():
     if self.args.ctime != None:
       counter += 1
 
-    if self.delim != None:
+    if self.spl_delim != None:
       counter += 1
 
     if self.args.priority != None:
@@ -197,13 +198,22 @@ class Steak():
       combined_lines.append(i)
 
     # Combines the contents of each list and removes all duplicates.
-    c_combined_content = []
-    d_combined_content = []
     combined_content = Steak.separate_items_and_ref(combined_lines)
 
-    for i in combined_lines:
+    # Adds addtional fields that comes after iocs and refs
+    d_combined_content = Steak.add_addtional_fields(combined_lines, combined_content)
 
-      for idx in combined_content:
+    combined_content = d_combined_content
+    return combined_content
+
+
+  def add_addtional_fields(combined_lines: list, combined_content: list):
+    c_combined_content = []
+    d_combined_content = []
+    
+    for idx in combined_content:
+
+      for i in combined_lines:
 
         if i[0] == idx[0]:
 
@@ -213,6 +223,7 @@ class Steak():
             new_item.append(None)
             new_item.append(None)
             c_combined_content.append(new_item)
+            break
           
           elif len(i) < 5 and len(i) > 2:
             new_item = idx
@@ -220,20 +231,22 @@ class Steak():
             new_item.append(i[3])
             new_item.append(None)
             c_combined_content.append(new_item)
-          
+            break
+
           elif len(i) == 5:
             new_item = idx
             new_item.append(i[2])
             new_item.append(i[3])
             new_item.append(i[4])
             c_combined_content.append(new_item)
+            break
 
-            
     for i in c_combined_content:
       d_combined_content.append(i[:5])
 
-    combined_content = d_combined_content
-    return combined_content
+    # test = list(set(d_combined_content))
+
+    return d_combined_content
 
 
   def get_duplicates(master_list: list, dup_list: list):
@@ -279,13 +292,29 @@ class Steak():
     subtracted_list = (second_set - first_set)
     subtracted_list = list(set(subtracted_list))
 
-    dupes = Steak.get_duplicates(duplicate_list, c_f2_lines)
+    d_dupes = []
+    dupes = Steak.get_duplicates(duplicate_list, c_f2_lines)  
+
+    for i in pair[0]:
+      for idx in dupes:
+        
+        if i[0] == idx[0]:
+          if i[1] != []:
+            new_item = []
+            new_item.append(idx[0])
+            new_item.append(idx[1])
+            new_item.append(i[2])
+            new_item.append(i[3])
+            new_item.append(i[4])
+            d_dupes.append(new_item)
+
+
     if self.show_refs == True:
-      return dupes
+      return d_dupes
 
     output = []
     for i in subtracted_list:
-      output.append([i, []])
+      output.append([i, [], None, None, None])
 
     return output
 
@@ -328,10 +357,29 @@ class Steak():
         item = Steak.check_json_error(i, "ioc")
         ref = Steak.check_json_error(i, "ref")
 
-        if len(ref) == 0:
+        if len(ref) == 0 or self.args.combine == True:
           print(f"{item}")
-        elif len(ref) > 0:
-          print(f"{item} -- {ref}")
+        
+        elif len(ref) > 0 and self.show_refs == True:
+          lseen = Steak.check_json_error(i, "last_seen")
+          sev = Steak.check_json_error(i, "priority")
+
+          if sev != None:
+            sev = sev.lower()
+            target = Steak.check_json_error(self.config, sev)
+            seen = self.convert_string_to_date(lseen)
+            today = date.today()
+            result = today - seen
+
+            if result.days > target:
+              print(
+                f"{item} -- {ref} | {sev} ({C.f_red('IOC is >= ' + str(C.f_yellow(target)) + C.f_red(' days old and should be re-investigated'))})"
+              )    
+            else:
+              print(f"{item} -- {ref}")
+          
+          else:
+            print(f"{item} -- {ref}")
 
 
   def separate_items_and_ref(content: list):
@@ -429,14 +477,16 @@ class Steak():
 
     first_seen = None             # Defines the first and last time that an ioc was investigated.
     last_seen = None
-
-    # Sets tje prioirty to the value as specified by the user.
-    if args.priority != None:
-      sev = args.priority.upper()
-    else:
-      sev = None
+    sev = ""
 
     for i in contents:
+      # Sets tje prioirty to the value as specified by the user.
+      if args.priority != None:
+        sev = args.priority.upper()
+      else:
+        sev = None
+      
+      self.dprint(i)
 
       # The first seen value should only be created when the first_seen value is null.
       if i[2] == None:
@@ -448,12 +498,12 @@ class Steak():
       if i[3] == None:
         last_seen = str(date.today())
       
-      # Overwrites the date if the flag is set to true.
+      # Overwrites the last_date to the current date if the flag is set to true.
       if args.overwrite_date == True:
         last_seen = str(date.today())
       
-      # Overwrites the date with a custom date entered via the commandline.
-      if args.ctime != None:
+      # Overwrites the last_date with a custom date entered via the commandline.
+      elif args.ctime != None:
         last_seen = self.convert_string_to_date(args.ctime)
         
         if last_seen != None:
@@ -469,24 +519,16 @@ class Steak():
       if i[4] == None:
         if sev == None:
           sev = "P5"
+        
+        # Santize input that the user has provided.
+        elif sev != None:
+          if sev != "P1" and sev != "P2" and sev != "P3" and sev != "P4" and sev != "P5":
+            sev = "P5"
+
       elif i[4] != None:
         sev = i[4]
-      
-      # Santize input that the user has provided.
-      elif sev != None:
-        if sev == "p5":
-          sev = "P5"
-        elif sev == "p4".upper():
-          sev = "P4"
-        elif sev == "p3".upper():
-          sev = "P3"
-        elif sev == "p2".upper():
-          sev = "P2"
-        elif sev == "p1".upper():
-          sev = "P1"
-        else:
-          sev = "P5"
 
+      self.dprint(sev)
       output["data"].append(
         {
           "ioc": i[0],

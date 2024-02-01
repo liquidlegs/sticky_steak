@@ -12,12 +12,19 @@ title = '''
                                      _/                                                         '''
 def file_args(file_path: str, sticky: Steak):
   args = sticky.args
+  out = []
+
+  sticky.dprint(f"args.combine == {C.fd_cyan(args.combine)}")
+  sticky.dprint(f"args.subtract == {C.fd_cyan(args.subtract)}")
+  sticky.dprint(f"sticky.fmt == {C.fd_cyan(sticky.fmt)}")
   
   if args.combine == True:
-    print(f"{ERR_FILE_PATH} Cannot combine {args.file1} with nothing")
+    sticky.err(f"{ERR_FILE_PATH} Cannot combine {args.file1} with nothing")
+    return
 
   elif args.subtract == True:
-    print(f"{ERR_FILE_PATH} Cannot subtract the contents of {args.file1} with nothing")
+    sticky.err(f"{ERR_FILE_PATH} Cannot subtract the contents of {args.file1} with nothing")
+    return
 
   elif sticky.fmt == True:
     out = sticky.convert_json()
@@ -71,13 +78,15 @@ def main():
   C.enable_colour_terminal()
   out = []
 
+  # Only used to allow output to be printed without perfomring any file operations on input.
   if args.combine != True and args.subtract != True:
     sticky.fmt = True
 
+  # Code block works on operations that allow us to combine files or subtract file contents from another.
   if args.file1 != None and args.file2 != None:
     
     if sticky.count_args() < 1:
-      print("Error: File paths have been provided, but no options specified - No action taken.")
+      sticky.err("File paths have been provided, but no options specified - No action taken.")
 
     if args.ref == True and args.subtract == False:
       args.subtract = True
@@ -108,7 +117,7 @@ def main():
     file_args(args.file2, sticky)
 
   else:
-    print(f"Error: No file(s) specified - Use python {Steak.get_script_name(sys.argv[0])} -h for help")
+    sticky.err(f"No file(s) specified - Use python {Steak.get_script_name(sys.argv[0])} -h for help")
     return
 
 
